@@ -10,4 +10,4 @@ once this ROM is running.
 Finally, press A to start the game.
 
 Beware of the left pin, which may cause a reset. It may be useful to repeat the process various
-times while slowly lifting up the cartridge on certain flashcarts.
+times while slowly extracting the cartridge on certain flashcarts.
