@@ -1,0 +1,7 @@
+*.exe
+rgbasm
+rgbfix
+rgblink
+*.gb
+*.gbc
+*.o
