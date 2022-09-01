@@ -30,8 +30,6 @@ start:
 	ld	[rSCX],a
 	ld	[rSCY],a
     ld  sp,$FFFE                       ; setup stack
-    ld  a,$10                          ; read P15 - returns a, b, select, start
-    ld  [rP1],a
     ld  a,$80
     ld  [rBCPS],a
     ld  [rOCPS],a
@@ -76,6 +74,10 @@ start:
     ld  [hl+],a
     dec c
     jr nz,.blank_oam_start
+    ld  hl,_VRAM+sgb_data
+    call _VRAM+.sgbpackettransfer
+    ld  a,$10                          ; read P15 - returns a, b, select, start
+    ld  [rP1],a
 
 .copy_to_hram
     ld  hl,_VRAM+hram_code
@@ -102,7 +104,42 @@ start:
     jr nz,.blank_oam
     ld  hl,_VRAM+.start_comunication
     jr  .copy_to_hram_exec
-    
+
+; From https://imanoleasgames.blogspot.com/2016/12/games-aside-1-super-game-boy.html
+; Super Game Boy packet transfer
+; @entrada  HL: Packet address
+.sgbpackettransfer:
+    push    bc
+    xor     a
+    ld      [rP1],  a               ; Initial pulse (Start write). P14 = LOW and P15 = LOW
+    ld      a,  P1F_4 | P1F_5
+    ld      [rP1],  a               ; P14 = HIGH and P15 = HIGH between pulses
+    ld      b,  16                  ; Number of bytes per packet
+.sgbpackettransfer_1:
+    ld      e,  8                   ; Bits per byte
+    ld      a,  [hl+]
+    ld      d,  a                   ; Next byte of the packet
+.sgbpackettransfer_2:
+    bit     0,  d
+    ld      a,  P1F_4               ; P14 = HIGH and P15 = LOW (Write 1)
+    jr      nz, .sgbpackettransfer_3
+    ld      a,  P1F_5               ; P14 = LOW and P15 = HIGH (Write 0)
+.sgbpackettransfer_3:
+    ld      [rP1],  a               ; We send one bit
+    ld      a,  P1F_4 | P1F_5
+    ld      [rP1],  a               ; P14 = HIGH and P15 = HIGH between pulses
+    rr      d                       ; We rotate the register so that the next bit goes to position 0
+    dec     e
+    jr      nz, .sgbpackettransfer_2; We jump while there are bits left to be sent
+    dec     b
+    jr      nz, .sgbpackettransfer_1; We jump while there are bytes left to be sent
+    ld      a,  P1F_5
+    ld      [rP1],  a               ; Bit 129, stop bit (Write 0)
+    ld      a,  P1F_4 | P1F_5
+    ld      [rP1],  a               ; P14 = HIGH and P15 = HIGH between pulses
+    pop     bc
+    ret
+     
 .start_comunication
     ld  a,$02
     ld  [$FF70],a
@@ -279,6 +316,9 @@ hdma_data:
 DB $D3,$00,$98,$A0,$12
 hdma_data2:
 DB $D3,$00,$80,$00,$40
+
+sgb_data:
+DB $71,$04,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 
 SECTION "Graphics",ROM0[$800]
 INCBIN "ui_graphics.bin"

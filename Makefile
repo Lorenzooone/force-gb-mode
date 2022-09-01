@@ -1,11 +1,11 @@
-AS := .\rgbasm
+AS := rgbasm
 ASFLAGS := -i inc/ -i data/ -o
-LD := .\rgblink
+LD := rgblink
 LDFLAGS1 := -x -d -o
 LDFLAGS2 := -x -o
-FX := .\rgbfix
-FXFLAGS1 := -p 0 -r 0 -t DMG_EXAMPLE -v
-FXFLAGS2 := -C -p 0 -r 0 -t CGB_EXAMPLE -v
+FX := rgbfix
+FXFLAGS1 := -p 0 -r 0 -s -l 51 -t DMG_EXAMPLE -v
+FXFLAGS2 := -c -p 0 -r 0 -t CGB_EXAMPLE -v
 
 cgb_src := $(wildcard *.asm)
 cgb_rom := $(cgb_src:.asm=.gbc)
